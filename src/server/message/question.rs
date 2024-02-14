@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Question {
     pub qname: Vec<u8>,
     pub qtype: u16,
@@ -12,13 +12,6 @@ impl Default for Question {
             qtype: 1,
             qclass: 1,
         }
-    }
-}
-
-#[allow(dead_code)]
-impl Question {
-    fn new() -> Self {
-        Question::default()
     }
 }
 

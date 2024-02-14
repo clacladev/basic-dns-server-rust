@@ -35,13 +35,6 @@ impl Default for Header {
     }
 }
 
-#[allow(dead_code)]
-impl Header {
-    pub fn new() -> Self {
-        Header::default()
-    }
-}
-
 impl From<&[u8]> for Header {
     fn from(bytes: &[u8]) -> Self {
         Header {

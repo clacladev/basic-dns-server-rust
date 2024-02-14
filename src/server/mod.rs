@@ -1,4 +1,4 @@
-use crate::server::message::{header::Header, Message};
+use crate::server::message::Message;
 use anyhow::Result;
 use std::net::UdpSocket;
 
@@ -12,18 +12,9 @@ pub fn start_server() -> Result<()> {
         let (size, source) = udp_socket.recv_from(&mut buf)?;
         println!("Received {} bytes from {}", size, source);
 
-        let message = Message::from(buf.as_slice());
-        // println!("{:?}", message);
-
-        let response_header = Header {
-            qr: 1,
-            qdcount: 1,
-            ..message.header
-        };
-        let response_header_bytes: Vec<u8> = response_header.into();
-        let response_question_bytes: Vec<u8> = message.question.into();
-
-        let response: Vec<u8> = [response_header_bytes, response_question_bytes].concat();
-        udp_socket.send_to(&response, source)?;
+        let request_message = Message::from(buf.as_slice());
+        let response_message = Message::response_message_for(&request_message);
+        let response_bytes: Vec<u8> = response_message.into();
+        udp_socket.send_to(&response_bytes, source)?;
     }
 }

@@ -1,6 +1,8 @@
+use self::answer::Answer;
 use self::header::Header;
 use self::question::Question;
 
+pub mod answer;
 pub mod header;
 pub mod question;
 
@@ -8,6 +10,7 @@ pub mod question;
 pub struct Message {
     pub header: Header,
     pub question: Question,
+    pub answer: Option<Answer>,
 }
 
 impl Default for Message {
@@ -15,21 +18,48 @@ impl Default for Message {
         Message {
             header: Header::default(),
             question: Question::default(),
+            answer: None,
         }
-    }
-}
-
-#[allow(dead_code)]
-impl Message {
-    pub fn new() -> Self {
-        Message::default()
     }
 }
 
 impl From<&[u8]> for Message {
     fn from(bytes: &[u8]) -> Self {
-        let header = Header::from(&bytes[0..12]);
-        let question = Question::from(&bytes[12..]);
-        Message { header, question }
+        Message {
+            header: Header::from(&bytes[0..12]),
+            question: Question::from(&bytes[12..]),
+            answer: None,
+        }
+    }
+}
+
+impl Message {
+    pub fn response_message_for(&self) -> Self {
+        let response_header = Header {
+            qr: 1,
+            qdcount: 1,
+            ancount: 1,
+            ..self.header
+        };
+        let _answer = Answer::for_question(&self.question);
+        Message {
+            header: response_header,
+            question: self.question.clone(),
+            answer: None,
+            // answer: Some(answer),
+        }
+    }
+}
+
+impl Into<Vec<u8>> for Message {
+    fn into(self) -> Vec<u8> {
+        let response_header_bytes: Vec<u8> = self.header.into();
+        let response_question_bytes: Vec<u8> = self.question.into();
+        let answer_bytes: Vec<u8> = match self.answer {
+            Some(answer) => answer.into(),
+            None => vec![],
+        };
+
+        [response_header_bytes, response_question_bytes, answer_bytes].concat()
     }
 }
