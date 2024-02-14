@@ -5,16 +5,6 @@ pub struct Question {
     pub qclass: u16,
 }
 
-impl Default for Question {
-    fn default() -> Self {
-        Question {
-            qname: vec![],
-            qtype: 1,
-            qclass: 1,
-        }
-    }
-}
-
 impl From<&[u8]> for Question {
     fn from(bytes: &[u8]) -> Self {
         let qname = match bytes.iter().position(|&byte| byte == 0) {

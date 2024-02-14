@@ -15,26 +15,6 @@ pub struct Header {
     pub arcount: u16,
 }
 
-impl Default for Header {
-    fn default() -> Self {
-        Header {
-            id: 0,
-            qr: 0,
-            opcode: 0,
-            aa: 0,
-            tc: 0,
-            rd: 0,
-            ra: 0,
-            z: 0,
-            rcode: 0,
-            qdcount: 0,
-            ancount: 0,
-            nscount: 0,
-            arcount: 0,
-        }
-    }
-}
-
 impl From<&[u8]> for Header {
     fn from(bytes: &[u8]) -> Self {
         Header {

@@ -13,16 +13,6 @@ pub struct Message {
     pub answer: Option<Answer>,
 }
 
-impl Default for Message {
-    fn default() -> Self {
-        Message {
-            header: Header::default(),
-            question: Question::default(),
-            answer: None,
-        }
-    }
-}
-
 impl From<&[u8]> for Message {
     fn from(bytes: &[u8]) -> Self {
         Message {

@@ -10,19 +10,6 @@ pub struct Answer {
     pub rdata: Vec<u8>,
 }
 
-impl Default for Answer {
-    fn default() -> Self {
-        Answer {
-            name: vec![],
-            qtype: 0,
-            qclass: 0,
-            ttl: 0,
-            rdlength: 0,
-            rdata: vec![],
-        }
-    }
-}
-
 impl Answer {
     pub fn for_question(question: &Question) -> Self {
         Answer {
