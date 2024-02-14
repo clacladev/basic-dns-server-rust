@@ -15,11 +15,15 @@ pub fn start_server() -> Result<()> {
         let message = Message::from(buf.as_slice());
         // println!("{:?}", message);
 
-        let response = Header {
+        let response_header = Header {
             qr: 1,
+            qdcount: 1,
             ..message.header
         };
-        let response: Vec<u8> = response.into();
+        let response_header_bytes: Vec<u8> = response_header.into();
+        let response_question_bytes: Vec<u8> = message.question.into();
+
+        let response: Vec<u8> = [response_header_bytes, response_question_bytes].concat();
         udp_socket.send_to(&response, source)?;
     }
 }
