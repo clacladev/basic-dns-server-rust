@@ -2,7 +2,7 @@ use super::question::Question;
 
 #[derive(Debug)]
 pub struct Answer {
-    pub name: String,
+    pub name: Vec<u8>,
     pub qtype: u16,
     pub qclass: u16,
     pub ttl: u32,
@@ -13,26 +13,33 @@ pub struct Answer {
 impl Default for Answer {
     fn default() -> Self {
         Answer {
-            name: String::new(),
+            name: vec![],
             qtype: 0,
             qclass: 0,
             ttl: 0,
             rdlength: 0,
-            rdata: Vec::new(),
+            rdata: vec![],
         }
     }
 }
 
 impl Answer {
-    pub fn for_question(_question: &Question) -> Self {
-        Answer::default()
+    pub fn for_question(question: &Question) -> Self {
+        Answer {
+            name: question.qname.clone(),
+            qtype: 1,
+            qclass: 1,
+            ttl: 60,
+            rdlength: 4,
+            rdata: vec![93, 184, 216, 34], // random IP address
+        }
     }
 }
 
 impl Into<Vec<u8>> for Answer {
     fn into(self) -> Vec<u8> {
         let mut bytes = vec![];
-        bytes.extend(self.name.as_bytes());
+        bytes.extend(self.name);
         bytes.push(0);
         bytes.extend(self.qtype.to_be_bytes());
         bytes.extend(self.qclass.to_be_bytes());
