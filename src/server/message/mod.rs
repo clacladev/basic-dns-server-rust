@@ -25,10 +25,15 @@ impl From<&[u8]> for Message {
 
 impl Message {
     pub fn response_message(&self, answer: Answer) -> Self {
+        let rcode: u8 = match self.header.opcode {
+            0 => 0,
+            _ => 4,
+        };
         let response_header = Header {
             qr: 1,
             qdcount: 1,
             ancount: 1,
+            rcode,
             ..self.header
         };
         Message {

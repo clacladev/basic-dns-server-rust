@@ -10,13 +10,15 @@ pub fn start_server() -> Result<()> {
 
     loop {
         // Read request message
-        let (size, source) = udp_socket.recv_from(&mut buf)?;
-        println!("Received {} bytes from {}", size, source);
+        let (_size, source) = udp_socket.recv_from(&mut buf)?;
+        // println!("Received {} bytes from {}", size, source);
         let request_message = Message::from(buf.as_slice());
+        // println!("Request message: {:?}", request_message);
 
         // Prepare response message
         let answer = Answer::for_question(&request_message.question);
         let response_message = request_message.response_message(answer);
+        // println!("Response message: {:?}", response_message);
 
         // Send response message
         let response_bytes: Vec<u8> = response_message.into();
