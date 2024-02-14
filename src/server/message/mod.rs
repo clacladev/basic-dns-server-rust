@@ -34,19 +34,17 @@ impl From<&[u8]> for Message {
 }
 
 impl Message {
-    pub fn response_message_for(&self) -> Self {
+    pub fn response_message(&self, answer: Answer) -> Self {
         let response_header = Header {
             qr: 1,
             qdcount: 1,
             ancount: 1,
             ..self.header
         };
-        let _answer = Answer::for_question(&self.question);
         Message {
             header: response_header,
             question: self.question.clone(),
-            answer: None,
-            // answer: Some(answer),
+            answer: Some(answer),
         }
     }
 }
