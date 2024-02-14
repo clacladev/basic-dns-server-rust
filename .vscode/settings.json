@@ -22,5 +22,6 @@
     "activityBar.background": "#1D3132",
     "titleBar.activeBackground": "#284447",
     "titleBar.activeForeground": "#F7FAFB"
-  }
+  },
+  "rust-analyzer.showUnlinkedFileNotification": false
 }
