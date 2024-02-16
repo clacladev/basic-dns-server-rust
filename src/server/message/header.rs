@@ -1,3 +1,5 @@
+pub const HEADER_SIZE: usize = 20;
+
 #[derive(Debug)]
 pub struct Header {
     pub id: u16,
