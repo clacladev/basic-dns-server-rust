@@ -1,6 +1,6 @@
 use super::question::Question;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Answer {
     pub name: Vec<u8>,
     pub qtype: u16,

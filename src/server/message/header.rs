@@ -1,4 +1,4 @@
-pub const HEADER_SIZE: usize = 20;
+pub const HEADER_SIZE: usize = 12;
 
 #[derive(Debug)]
 pub struct Header {

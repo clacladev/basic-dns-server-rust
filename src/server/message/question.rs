@@ -6,68 +6,87 @@ pub struct Question {
     pub qname: Vec<u8>,
     pub qtype: u16,
     pub qclass: u16,
-    pub labels: Vec<String>,
+    pub label: String,
 }
 
 impl Question {
-    fn get_labels(bytes: &[u8]) -> (usize, Vec<String>) {
+    pub fn from_bytes(bytes: &[u8], qdcount: u16) -> Vec<Self> {
+        let mut questions = vec![];
         let mut labels_tree: BTreeMap<usize, String> = BTreeMap::new();
         let mut offset = 0;
 
-        loop {
-            let label_length = bytes[offset] as usize;
+        for _ in 0..qdcount {
+            let label_start_offset = offset + HEADER_SIZE;
+            loop {
+                let length_byte = bytes[offset] as usize;
 
-            let is_null_byte = label_length == 0;
-            if is_null_byte {
-                break; // End of questions
-            }
+                let is_null_byte = length_byte == 0;
+                if is_null_byte {
+                    // Add end of current question token (empty string)
+                    labels_tree.insert(offset + HEADER_SIZE, String::new());
+                    offset += 1;
+                    break;
+                }
 
-            // Just the initial two bits are used to indicate the length of the label
-            let label_type = label_length & 0b11000000;
+                // Just the initial two bits are used to indicate the length of the label
+                let label_type = length_byte & 0b11000000;
 
-            let is_label_pointer = label_type == 0b11000000;
-            if is_label_pointer {
-                // Get the pointed label
-                let offset_pointer =
-                    u16::from_be_bytes([bytes[offset] & 0b00111111, bytes[offset + 1]]) as usize;
-                let label = labels_tree.get(&offset_pointer).unwrap().into();
+                let is_label_pointer = label_type == 0b11000000;
+                if is_label_pointer {
+                    // Get the pointed label
+                    let offset_pointer =
+                        u16::from_be_bytes([bytes[offset] & 0b00111111, bytes[offset + 1]])
+                            as usize;
+                    let label = Self::get_labels_from_btree(&labels_tree, offset_pointer);
+                    let label = label[..label.len() - 1].to_string(); // Remove the trailing dot
 
-                // Add the label to the tree
-                labels_tree.insert(offset + HEADER_SIZE, label);
-                offset += 2;
-            } else {
+                    // Add the label to the tree
+                    labels_tree.insert(offset + HEADER_SIZE, label);
+                    offset += 2;
+
+                    // Add end of current question token (empty string)
+                    labels_tree.insert(offset + HEADER_SIZE, String::new());
+                    break;
+                }
+
                 // Add the label to the tree
                 let label =
-                    String::from_utf8(bytes[(offset + 1)..(offset + label_length + 1)].to_vec())
+                    String::from_utf8(bytes[(offset + 1)..(offset + length_byte + 1)].to_vec())
                         .unwrap();
                 labels_tree.insert(offset + HEADER_SIZE, label);
-                offset += label_length + 1;
+                offset += length_byte + 1;
             }
+
+            let label = Self::get_labels_from_btree(&labels_tree, label_start_offset);
+            let qname = bytes[..offset - 1].to_vec();
+            let qtype = u16::from_be_bytes([bytes[offset], bytes[offset + 1]]);
+            let qclass = u16::from_be_bytes([bytes[offset + 2], bytes[offset + 3]]);
+            offset += 4;
+
+            questions.push(Question {
+                qname,
+                qtype,
+                qclass,
+                label,
+            });
         }
 
-        // Stitch labels together from hashmap
+        return questions;
+    }
+
+    fn get_labels_from_btree(labels_tree: &BTreeMap<usize, String>, from_offset: usize) -> String {
         let mut complete_label = String::new();
-        for (_, label) in labels_tree {
-            complete_label.push_str(&label);
+        for (offset, label) in labels_tree {
+            if *offset < from_offset {
+                continue;
+            }
+            if label.is_empty() {
+                break;
+            }
+            complete_label.push_str(label);
             complete_label.push_str(".");
         }
-
-        (offset, vec![complete_label])
-    }
-}
-
-impl From<&[u8]> for Question {
-    fn from(bytes: &[u8]) -> Self {
-        let (offset, labels) = Question::get_labels(bytes);
-        let qname = bytes[..offset].to_vec();
-        let bytes = &bytes[(offset + 1)..];
-
-        Question {
-            qname,
-            qtype: u16::from_be_bytes([bytes[0], bytes[1]]),
-            qclass: u16::from_be_bytes([bytes[2], bytes[3]]),
-            labels,
-        }
+        complete_label
     }
 }
 
