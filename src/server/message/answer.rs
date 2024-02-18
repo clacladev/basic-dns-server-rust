@@ -2,7 +2,7 @@ use super::question::Question;
 
 #[derive(Debug, Clone)]
 pub struct Answer {
-    pub name: Vec<u8>,
+    pub qname: Vec<u8>,
     pub qtype: u16,
     pub qclass: u16,
     pub ttl: u32,
@@ -13,7 +13,7 @@ pub struct Answer {
 impl Answer {
     pub fn for_question(question: &Question) -> Self {
         Answer {
-            name: question.qname.clone(),
+            qname: question.uncompressed_question().qname,
             qtype: 1,
             qclass: 1,
             ttl: 60,
@@ -26,7 +26,7 @@ impl Answer {
 impl Into<Vec<u8>> for Answer {
     fn into(self) -> Vec<u8> {
         let mut bytes = vec![];
-        bytes.extend(self.name);
+        bytes.extend(self.qname);
         bytes.push(0);
         bytes.extend(self.qtype.to_be_bytes());
         bytes.extend(self.qclass.to_be_bytes());

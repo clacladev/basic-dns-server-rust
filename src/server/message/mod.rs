@@ -40,7 +40,11 @@ impl Message {
 
         Message {
             header: response_header,
-            questions: self.questions.clone(),
+            questions: self
+                .questions
+                .iter()
+                .map(Question::uncompressed_question)
+                .collect(),
             answers: answers,
         }
     }
@@ -70,28 +74,94 @@ impl Into<Vec<u8>> for Message {
 
 #[cfg(test)]
 mod test {
+    use std::vec;
+
     use super::*;
+
+    const MESSAGE_BYTES: &[u8] = &[
+        144, 155, 1, 0, 0, 2, 0, 0, 0, 0, 0, 0, 3, 97, 98, 99, 17, 108, 111, 110, 103, 97, 115,
+        115, 100, 111, 109, 97, 105, 110, 110, 97, 109, 101, 3, 99, 111, 109, 0, 0, 1, 0, 1, 3,
+        100, 101, 102, 192, 16, 0, 1, 0, 1,
+    ];
 
     #[test]
     fn test_when_two_questions_with_compression_then_they_are_decompressed_correctly() {
         // Given
-        let message_bytes: &[u8] = &[
-            144, 155, 1, 0, 0, 2, 0, 0, 0, 0, 0, 0, 3, 97, 98, 99, 17, 108, 111, 110, 103, 97, 115,
-            115, 100, 111, 109, 97, 105, 110, 110, 97, 109, 101, 3, 99, 111, 109, 0, 0, 1, 0, 1, 3,
-            100, 101, 102, 192, 16, 0, 1, 0, 1,
-        ];
         // When
-        let request_message = Message::from(message_bytes);
+        let request_message = Message::from(MESSAGE_BYTES);
         // Then
         assert_eq!(request_message.header.qdcount, 2);
         assert_eq!(request_message.questions.len(), 2);
+        assert_eq!(
+            request_message.questions[0].qname,
+            vec![
+                3, 97, 98, 99, 17, 108, 111, 110, 103, 97, 115, 115, 100, 111, 109, 97, 105, 110,
+                110, 97, 109, 101, 3, 99, 111, 109
+            ]
+        );
         assert_eq!(
             request_message.questions[0].label,
             "abc.longassdomainname.com.".to_string()
         );
         assert_eq!(
+            request_message.questions[1].qname,
+            vec![3, 100, 101, 102, 192, 16]
+        );
+        assert_eq!(
             request_message.questions[1].label,
             "def.longassdomainname.com.".to_string()
+        );
+    }
+
+    #[test]
+    fn test_when_request_with_compressed_questions_then_response_questions_are_uncompressed() {
+        // Given
+        let request_message = Message::from(MESSAGE_BYTES);
+        // When
+        let uncompressed_question = request_message.questions[0].uncompressed_question();
+        // Then
+        assert_eq!(
+            uncompressed_question.qname,
+            vec![
+                3, 97, 98, 99, 17, 108, 111, 110, 103, 97, 115, 115, 100, 111, 109, 97, 105, 110,
+                110, 97, 109, 101, 3, 99, 111, 109
+            ]
+        );
+        // When
+        let uncompressed_question = request_message.questions[1].uncompressed_question();
+        // Then
+        assert_eq!(
+            uncompressed_question.qname,
+            vec![
+                3, 100, 101, 102, 17, 108, 111, 110, 103, 97, 115, 115, 100, 111, 109, 97, 105,
+                110, 110, 97, 109, 101, 3, 99, 111, 109
+            ]
+        );
+    }
+
+    #[test]
+    fn test_when_response_answer_questions_are_uncompressed() {
+        // Given
+        let request_message = Message::from(MESSAGE_BYTES);
+        // When
+        let answer = Answer::for_question(&request_message.questions[0]);
+        // Then
+        assert_eq!(
+            answer.qname,
+            vec![
+                3, 97, 98, 99, 17, 108, 111, 110, 103, 97, 115, 115, 100, 111, 109, 97, 105, 110,
+                110, 97, 109, 101, 3, 99, 111, 109
+            ]
+        );
+        // When
+        let answer = Answer::for_question(&request_message.questions[1]);
+        // Then
+        assert_eq!(
+            answer.qname,
+            vec![
+                3, 100, 101, 102, 17, 108, 111, 110, 103, 97, 115, 115, 100, 111, 109, 97, 105,
+                110, 110, 97, 109, 101, 3, 99, 111, 109
+            ]
         );
     }
 }

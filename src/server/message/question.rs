@@ -17,6 +17,7 @@ impl Question {
 
         for _ in 0..qdcount {
             let label_start_offset = offset + HEADER_SIZE;
+            let mut is_label_ending_with_pointer = false;
             loop {
                 let length_byte = bytes[offset] as usize;
 
@@ -46,6 +47,7 @@ impl Question {
 
                     // Add end of current question token (empty string)
                     labels_tree.insert(offset + HEADER_SIZE, String::new());
+                    is_label_ending_with_pointer = true;
                     break;
                 }
 
@@ -58,7 +60,11 @@ impl Question {
             }
 
             let label = Self::get_labels_from_btree(&labels_tree, label_start_offset);
-            let qname = bytes[..offset - 1].to_vec();
+            let qname = if is_label_ending_with_pointer {
+                bytes[(label_start_offset - HEADER_SIZE)..offset].to_vec()
+            } else {
+                bytes[(label_start_offset - HEADER_SIZE)..offset - 1].to_vec()
+            };
             let qtype = u16::from_be_bytes([bytes[offset], bytes[offset + 1]]);
             let qclass = u16::from_be_bytes([bytes[offset + 2], bytes[offset + 3]]);
             offset += 4;
@@ -87,6 +93,31 @@ impl Question {
             complete_label.push_str(".");
         }
         complete_label
+    }
+}
+
+impl Question {
+    pub fn uncompressed_question(&self) -> Self {
+        let label = self.label.clone();
+        let qname = label
+            .split(".")
+            .map(|label| {
+                let mut label_bytes = label.as_bytes().to_vec();
+                let length = label_bytes.len() as u8;
+                if length > 0 {
+                    label_bytes.insert(0, length);
+                }
+                label_bytes
+            })
+            .flatten()
+            .collect();
+
+        Question {
+            qname,
+            qtype: self.qtype,
+            qclass: self.qclass,
+            label,
+        }
     }
 }
 

@@ -17,12 +17,12 @@ pub fn start_server() -> Result<()> {
         // println!("Request message: {:?}", request_message);
 
         // Prepare response message
-        let answer = request_message
+        let answers = request_message
             .questions
             .iter()
             .map(Answer::for_question)
             .collect();
-        let response_message = request_message.response_message(answer);
+        let response_message = request_message.response_message(answers);
         // println!("Response message: {:?}", response_message);
 
         // Send response message
