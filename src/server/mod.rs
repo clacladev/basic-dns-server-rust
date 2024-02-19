@@ -8,18 +8,18 @@ pub mod resolver;
 
 pub fn start_server(resolver: Resolver) -> Result<()> {
     let udp_socket = UdpSocket::bind("127.0.0.1:2053")?;
-    let mut buf = [0; 512];
+    let mut buffer = [0; 512];
 
     loop {
         // Read request message
-        let (size, source) = udp_socket.recv_from(&mut buf)?;
-        let bytes = &buf[..size];
+        let (size, source) = udp_socket.recv_from(&mut buffer)?;
+        let bytes = &buffer[..size];
 
         let request_message = Message::from(bytes);
         // println!("Request message: {:?}", request_message);
 
         // Get answers from resolver
-        let answers = resolve_questions(request_message.questions.as_slice(), &resolver);
+        let answers = resolve_questions(request_message.questions.as_slice(), &resolver)?;
         // Prepare response message
         let response_message = request_message.response_message(answers);
         // println!("Response message: {:?}", response_message);

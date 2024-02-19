@@ -1,0 +1,44 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug executable './your_server.sh'",
+      "cargo": {
+        "args": [
+          "build",
+          "--bin=dns-starter-rust",
+          "--package=dns-starter-rust"
+        ],
+        "filter": {
+          "name": "dns-starter-rust",
+          "kind": "bin"
+        }
+      },
+      "args": ["./your_server.sh"],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug executable './your_server.sh --resolver 8:8:8:8:53'",
+      "cargo": {
+        "args": [
+          "build",
+          "--bin=dns-starter-rust",
+          "--package=dns-starter-rust"
+        ],
+        "filter": {
+          "name": "dns-starter-rust",
+          "kind": "bin"
+        }
+      },
+      "args": ["./your_server.sh", "--resolver", "8:8:8:8:53"],
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}

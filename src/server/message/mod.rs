@@ -1,5 +1,5 @@
 use self::answer::Answer;
-use self::header::Header;
+use self::header::{Header, HEADER_SIZE};
 use self::question::Question;
 
 pub mod answer;
@@ -15,12 +15,20 @@ pub struct Message {
 
 impl From<&[u8]> for Message {
     fn from(bytes: &[u8]) -> Self {
-        let header = Header::from(&bytes[0..12]);
-        let qdcount = header.qdcount;
+        let header = Header::from(&bytes[0..HEADER_SIZE]);
+        let mut initial_offset = HEADER_SIZE;
+
+        let (questions, questions_offset) =
+            Question::from_bytes(&bytes[initial_offset..], header.qdcount, initial_offset);
+        initial_offset += questions_offset;
+
+        let (answers, _) =
+            Answer::from_bytes(&bytes[initial_offset..], header.ancount, initial_offset);
+
         Message {
             header,
-            questions: Question::from_bytes(&bytes[12..], qdcount),
-            answers: vec![],
+            questions,
+            answers,
         }
     }
 }
@@ -147,7 +155,7 @@ mod test {
         let answer = Answer::for_question(&request_message.questions[0]);
         // Then
         assert_eq!(
-            answer.qname,
+            answer.name,
             vec![
                 3, 97, 98, 99, 17, 108, 111, 110, 103, 97, 115, 115, 100, 111, 109, 97, 105, 110,
                 110, 97, 109, 101, 3, 99, 111, 109
@@ -157,7 +165,7 @@ mod test {
         let answer = Answer::for_question(&request_message.questions[1]);
         // Then
         assert_eq!(
-            answer.qname,
+            answer.name,
             vec![
                 3, 100, 101, 102, 17, 108, 111, 110, 103, 97, 115, 115, 100, 111, 109, 97, 105,
                 110, 110, 97, 109, 101, 3, 99, 111, 109
