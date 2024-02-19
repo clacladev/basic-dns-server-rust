@@ -12,7 +12,7 @@ This is a basic DNS server implementation in Rust. This is a small learning and 
 
 Run `cargo test` to run the tests
 
-## Resources
+## Resources
 
 - [DNS RFC](https://datatracker.ietf.org/doc/html/rfc1035#section-4.1)
 - [DNS Packet Format](https://www2.cs.duke.edu/courses/fall16/compsci356/DNS/DNS-primer.pdf)
