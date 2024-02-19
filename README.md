@@ -6,7 +6,7 @@ This is a basic DNS server implementation in Rust. This is a small learning and 
 
 1. Ensure you have `cargo (1.70)` installed locally
 2. In the terminal run `./your_server.sh` to run your DNS server
-3. In another terminal run `dig @127.0.0.1 -p 2053 example.com` to query the server
+3. In another terminal run `dig @127.0.0.1 -p 2053 +noedns example.com` to query the server
 
 ## How to test
 
